@@ -1,4 +1,4 @@
-package com.example.odap.domain;
+package com.example.odap.entity;
 
 import java.io.Serializable;
 import javax.persistence.Column;

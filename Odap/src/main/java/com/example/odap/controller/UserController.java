@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.odap.dao.UserRepository;
-import com.example.odap.domain.User;
+import com.example.odap.repository.UserRepository;
+import com.example.odap.entity.User;
 
 @RestController
 @RequestMapping("user")
