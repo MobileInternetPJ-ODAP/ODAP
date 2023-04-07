@@ -12,7 +12,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
     @Override
-    public User registerUser(String userName, String password) {
+    public User register(String userName, String password) {
         // 检查用户名是否已经存在
         if (userRepository.existsByUserName(userName)){
             throw new UserRegistrationException("用户名已存在");
@@ -25,11 +25,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findUserByName(String userName) {
-        return null;
+        return userRepository.findByUserName(userName);
     }
 
     @Override
     public boolean isUserExist(String userName) {
-        return false;
+        return userRepository.existsByUserName(userName);
     }
 }

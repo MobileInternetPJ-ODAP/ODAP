@@ -5,7 +5,7 @@ import com.example.odap.entity.User;
 public interface UserService {
 
     // 注册新用户
-    User registerUser(String userName, String password);
+    User register(String userName, String password);
 
     // 根据用户名查找用户
     User findUserByName(String userName);

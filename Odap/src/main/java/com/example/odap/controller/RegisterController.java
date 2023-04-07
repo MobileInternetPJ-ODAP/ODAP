@@ -8,12 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/api/user")
 public class RegisterController {
 
     @Autowired
@@ -29,7 +31,7 @@ public class RegisterController {
         // 调用 UserService 的 register 方法进行用户注册
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.registerUser(signUpRequest.getUsername(), signUpRequest.getPassword());
+            User user = userService.register(signUpRequest.getUsername(), signUpRequest.getPassword());
             response.put("code", CODE_SUCCESS);
             response.put("error_msg", MSG_SUCCESS);
             response.put("data", user);
