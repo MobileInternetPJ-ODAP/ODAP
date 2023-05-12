@@ -2,7 +2,7 @@ package com.example.odap.controller;
 
 import com.example.odap.entity.User;
 import com.example.odap.exception.UserRegistrationException;
-import com.example.odap.pojo.SignupForm;
+import com.example.odap.request.SignupForm;
 import com.example.odap.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

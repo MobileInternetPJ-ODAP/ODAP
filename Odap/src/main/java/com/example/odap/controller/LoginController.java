@@ -1,7 +1,7 @@
 package com.example.odap.controller;
 
 import com.example.odap.entity.User;
-import com.example.odap.pojo.LoginForm;
+import com.example.odap.request.LoginForm;
 import com.example.odap.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
