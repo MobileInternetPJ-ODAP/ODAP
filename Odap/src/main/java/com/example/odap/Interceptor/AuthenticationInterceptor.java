@@ -37,7 +37,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         if(session!=null){
             session.setAttribute("lastAccessTime",System.currentTimeMillis());
         }
-
         // 用户已登录，继续处理请求
         return true;
     }

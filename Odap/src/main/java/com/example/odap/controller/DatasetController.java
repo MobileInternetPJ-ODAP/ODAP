@@ -4,17 +4,25 @@ import com.example.odap.entity.Dataset;
 import com.example.odap.repository.DatasetRepository;
 import com.example.odap.request.DatasetAddRequest;
 import com.example.odap.request.DatasetUpdateRequest;
+import com.example.odap.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.odap.DTO.DatasetResponse;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -22,17 +30,57 @@ public class DatasetController {
 
     @Autowired
     private DatasetRepository datasetRepository;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private String uploadDir;
+
     @PostMapping("/dataset")
-    public ResponseEntity<Map<String, Object>> createDataset(@RequestBody DatasetAddRequest request) {
-        // 暂时随便创建一个数据集对象
+    public ResponseEntity<Map<String, Object>> createDataset(
+            HttpServletRequest httpRequest,
+            @RequestParam String desc,
+            @RequestParam String sample_type,
+            @RequestParam String tag_type,
+            @RequestParam("file") MultipartFile file) throws IOException {
+
+        //将文件存储在固定目录下，并将路径赋给dataset
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        //生成一个唯一的文件名
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        File serverFile = new File(dir.getAbsolutePath() + File.separator + fileName);
+
+        //将文件存储在固定目录下
+        try (OutputStream os = Files.newOutputStream(serverFile.toPath())) {
+            os.write(file.getBytes());
+        }
+
         Dataset dataset = new Dataset();
-        dataset.setDatasetName("test");
-        dataset.setPublisherId(1L);
-        dataset.setPubTime("test");
-        dataset.setDescription(request.getDesc());
-        dataset.setSampleSize(1);
-        dataset.setSampleType(request.getSample_type());
-        dataset.setTagType(request.getTag_type());
+        dataset.setDatasetName(file.getOriginalFilename());
+        long id = userService.getCurrentUserId(httpRequest);
+        dataset.setPublisherId(id);
+        LocalDateTime pubTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String pubTimeStr = pubTime.format(formatter);
+        dataset.setPubTime(pubTimeStr);
+        dataset.setDescription(desc);
+
+        double sizeInBytes = file.getSize();
+        double sizeInMB = sizeInBytes / (1024 * 1024);
+        //保留两位小数
+        sizeInMB = (double) Math.round(sizeInMB * 100) / 100;
+
+        dataset.setSampleSize(sizeInMB);
+        dataset.setSampleType(sample_type);
+        dataset.setTagType(tag_type);
+        dataset.setFilePath(serverFile.getAbsolutePath());
+
+
 
         datasetRepository.save(dataset);
 
@@ -47,6 +95,7 @@ public class DatasetController {
 
         return ResponseEntity.ok(response);
     }
+
     @GetMapping("/datasets")
     public ResponseEntity<Map<String, Object>> getDatasets(
             @RequestParam("page_num") int pageNum,
@@ -81,7 +130,9 @@ public class DatasetController {
 
 
     @PutMapping("/dataset/{id}")
-    public ResponseEntity<Map<String, Object>> updateDataset(@PathVariable("id") String id, @RequestBody DatasetUpdateRequest request) {
+    public ResponseEntity<Map<String, Object>> updateDataset(@PathVariable("id") String id, @RequestParam String desc,
+                                                             @RequestParam String sample_type, @RequestParam String tag_type,
+                                                             @RequestParam("file") MultipartFile file) throws IOException {
         // 根据id查询数据库中的数据集
         Dataset dataset = datasetRepository.findById(Long.valueOf(id)).orElse(null);
         if (dataset == null) {
@@ -89,15 +140,41 @@ public class DatasetController {
             // 返回适当的错误响应
         }
 
-        // todo: 更新数据集的属性，新上传的文件的其他属性也要解析，这里先不管
-        dataset.setDescription(request.getDesc());
-        dataset.setSampleType(request.getSample_type());
-        dataset.setTagType(request.getTag_type());
+        // 删除原有文件
+        File oldFile = new File(dataset.getFilePath());
+        if (oldFile.exists()) {
+            oldFile.delete();
+        }
+
+        // 保存新上传的文件到指定目录下
+
+        // String uploadDir = "/Users/zhengyuanze/upload_data";
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        File serverFile = new File(dir.getAbsolutePath() + File.separator + fileName);
+
+        try (OutputStream os = Files.newOutputStream(serverFile.toPath())) {
+            os.write(file.getBytes());
+        }
+
+        // 更新数据集的属性
+        dataset.setDescription(desc);
+        dataset.setSampleType(sample_type);
+        dataset.setTagType(tag_type);
+        dataset.setFilePath(serverFile.getAbsolutePath());
+
+        double sizeInBytes = file.getSize();
+        double sizeInMB = sizeInBytes / (1024 * 1024);
+        //保留两位小数
+        sizeInMB = (double) Math.round(sizeInMB * 100) / 100;
+        dataset.setSampleSize(sizeInMB);
 
         // 保存更新后的数据集到数据库
         Dataset updatedDataset = datasetRepository.save(dataset);
-
-        // 构建响应数据
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
         response.put("error_msg", "success");
@@ -105,6 +182,7 @@ public class DatasetController {
 
         return ResponseEntity.ok(response);
     }
+
 
     @DeleteMapping("/dataset/{id}")
     public ResponseEntity<Map<String, Object>> deleteDataset(@PathVariable("id") String id) {
@@ -116,6 +194,11 @@ public class DatasetController {
         }
 
         // 删除数据集
+        assert dataset != null;
+        File oldFile = new File(dataset.getFilePath());
+        if (oldFile.exists()) {
+            oldFile.delete();
+        }
         datasetRepository.delete(dataset);
 
         // 构建响应数据
@@ -144,7 +227,5 @@ public class DatasetController {
 
         return ResponseEntity.ok(response);
     }
-
-
 
 }

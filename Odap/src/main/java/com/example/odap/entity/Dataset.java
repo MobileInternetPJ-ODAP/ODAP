@@ -27,15 +27,18 @@ public class Dataset {
     @Column(name = "sample_type")
     private String sampleType;
     @Column(name = "sample_size")
-    private int sampleSize;
+    private double sampleSize;
     @Column(name = "tag_type")
     private String tagType;
+
+    @Column(name = "file_path")
+    private String filePath;
 
     public Dataset() {
         super();
     }
 
-    public Dataset(String name, Long publisherId, String pubTime, String description, String sampleType, int sampleSize, String tagType) {
+    public Dataset(String name, Long publisherId, String pubTime, String description, String sampleType, double sampleSize, String tagType, String filePath){
         super();
         this.datasetName = name;
         this.publisherId = publisherId;
@@ -44,6 +47,7 @@ public class Dataset {
         this.sampleType = sampleType;
         this.sampleSize = sampleSize;
         this.tagType = tagType;
+        this.filePath = filePath;
     }
 
 }

@@ -7,6 +7,9 @@ import com.example.odap.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
@@ -31,5 +34,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean isUserExist(String userName) {
         return userRepository.existsByUserName(userName);
+    }
+
+    @Override
+    public Long getCurrentUserId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            return null;
+        }
+        User user = (User) session.getAttribute("user");
+        return user.getId();
     }
 }
