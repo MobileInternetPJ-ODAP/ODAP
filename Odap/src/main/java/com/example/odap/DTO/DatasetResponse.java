@@ -9,6 +9,7 @@ import lombok.Setter;
 @Setter
 public class DatasetResponse {
     private String _id;
+    private String dataset_name;
     private String publisher_id;
     private String pub_time;
     private String desc;
@@ -17,6 +18,7 @@ public class DatasetResponse {
 
     public DatasetResponse(Dataset dataset) {
         this._id = dataset.getId().toString();
+        this.dataset_name = dataset.getDatasetName();
         this.publisher_id = dataset.getPublisherId().toString();
         this.pub_time = dataset.getPubTime();
         this.desc = dataset.getDescription();
