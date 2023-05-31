@@ -1,7 +1,9 @@
 package com.example.odap.controller;
 
 import com.example.odap.entity.Dataset;
+import com.example.odap.entity.PictureData;
 import com.example.odap.repository.DatasetRepository;
+import com.example.odap.repository.PictureDataRepository;
 import com.example.odap.request.DatasetAddRequest;
 import com.example.odap.request.DatasetUpdateRequest;
 import com.example.odap.service.UserService;
@@ -15,14 +17,13 @@ import com.example.odap.DTO.DatasetResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @RestController
 @CrossOrigin
@@ -32,6 +33,8 @@ public class DatasetController {
     @Autowired
     private DatasetRepository datasetRepository;
 
+    @Autowired
+    private PictureDataRepository pictureDataRepository;
     @Autowired
     private UserService userService;
 
@@ -75,6 +78,11 @@ public class DatasetController {
         try (OutputStream os = Files.newOutputStream(serverFile.toPath())) {
             os.write(file.getBytes());
         }
+        String unzipDirPath = dir.getAbsolutePath() + File.separator + "unzip" + File.separator + fileName;
+        File unzipDir = new File(unzipDirPath);
+        if (!unzipDir.exists()) {
+            unzipDir.mkdirs();
+        }
 
         Dataset dataset = new Dataset();
         dataset.setDatasetName(file.getOriginalFilename());
@@ -102,6 +110,26 @@ public class DatasetController {
 
         DatasetResponse datasetResponse = new DatasetResponse(dataset);
 
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(serverFile))) {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                File newFile = newFile(unzipDir, zipEntry);
+                try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, len);
+                    }
+                }
+
+                PictureData pictureData = new PictureData(dataset.getId(), newFile.getName(), newFile.getAbsolutePath());
+                pictureDataRepository.save(pictureData);
+
+
+                zipEntry = zis.getNextEntry();
+            }
+            zis.closeEntry();
+        }
 
 
         Map<String, Object> response = new HashMap<>();
@@ -245,4 +273,18 @@ public class DatasetController {
         return ResponseEntity.ok(response);
     }
 
+
+    public File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
+        File destFile = new File(destinationDir, zipEntry.getName());
+
+        String destDirPath = destinationDir.getCanonicalPath();
+        String destFilePath = destFile.getCanonicalPath();
+
+        if (!destFilePath.startsWith(destDirPath + File.separator)) {
+            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
+        }
+
+        return destFile;
+    }
 }
+
