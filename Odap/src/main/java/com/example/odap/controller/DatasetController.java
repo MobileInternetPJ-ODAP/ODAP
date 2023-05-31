@@ -39,6 +39,20 @@ public class DatasetController {
     private String uploadDir;
 
     @CrossOrigin
+    @GetMapping("/count_datasets")
+    public ResponseEntity<Map<String, Object>> getDatasetCount() {
+        long count = datasetRepository.count();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("code", 200);
+        response.put("error_msg", "success");
+        response.put("data", count);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @CrossOrigin
     @PostMapping("/dataset")
     public ResponseEntity<Map<String, Object>> createDataset(
             HttpServletRequest httpRequest,
