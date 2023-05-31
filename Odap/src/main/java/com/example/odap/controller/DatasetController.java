@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/api")
 public class DatasetController {
 
@@ -37,6 +38,7 @@ public class DatasetController {
     @Autowired
     private String uploadDir;
 
+    @CrossOrigin
     @PostMapping("/dataset")
     public ResponseEntity<Map<String, Object>> createDataset(
             HttpServletRequest httpRequest,

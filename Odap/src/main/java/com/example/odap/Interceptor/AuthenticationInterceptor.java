@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.net.HttpCookie;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,13 +44,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     }
 
     private boolean isUserLoggedIn(HttpServletRequest request) {
-        //todo：也可以使用 Spring Security、JWT 等其他牛逼的方式进行验证，我比较菜，就用这种简单的方式了
         HttpSession session = request.getSession(false); // 获取会话，如果不存在则返回null
         if (session != null) {
             User user = (User) session.getAttribute("user");
-            if (user != null) {
-                return true;
-            }
+            return user != null;
         }
         return false;
     }
