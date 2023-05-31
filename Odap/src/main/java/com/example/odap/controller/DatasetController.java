@@ -98,6 +98,7 @@ public class DatasetController {
         return ResponseEntity.ok(response);
     }
 
+    @CrossOrigin
     @GetMapping("/datasets")
     public ResponseEntity<Map<String, Object>> getDatasets(
             @RequestParam("page_num") int pageNum,
@@ -130,7 +131,7 @@ public class DatasetController {
         return ResponseEntity.ok(response);
     }
 
-
+    @CrossOrigin
     @PutMapping("/dataset/{id}")
     public ResponseEntity<Map<String, Object>> updateDataset(@PathVariable("id") String id, @RequestParam String desc,
                                                              @RequestParam String sample_type, @RequestParam String tag_type,
@@ -185,7 +186,7 @@ public class DatasetController {
         return ResponseEntity.ok(response);
     }
 
-
+    @CrossOrigin
     @DeleteMapping("/dataset/{id}")
     public ResponseEntity<Map<String, Object>> deleteDataset(@PathVariable("id") String id) {
         // 根据id查询数据库中的数据集
