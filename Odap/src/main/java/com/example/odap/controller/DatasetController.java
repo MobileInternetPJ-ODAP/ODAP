@@ -229,7 +229,7 @@ public class DatasetController {
     }
 
     @CrossOrigin
-    @DeleteMapping("/dataset/{id}")
+    @GetMapping ("/del_dataset/{id}")
     public ResponseEntity<Map<String, Object>> deleteDataset(@PathVariable("id") String id) {
         // 根据id查询数据库中的数据集
         Dataset dataset = datasetRepository.findById(Long.valueOf(id)).orElse(null);
