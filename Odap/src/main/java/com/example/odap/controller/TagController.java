@@ -2,6 +2,7 @@ package com.example.odap.controller;
 import com.example.odap.DTO.TagResponse;
 import com.example.odap.entity.ImageTagData;
 import com.example.odap.repository.ImageTagDataRepo;
+import com.example.odap.request.TagForm;
 import com.example.odap.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,15 +24,11 @@ public class TagController {
     @PostMapping("/tag")
     public ResponseEntity<Map<String, Object>> addTag(
             HttpServletRequest httpRequest,
-            @RequestParam String dataset_id, //确定标注的是哪个数据集
-            @RequestParam String sample_id,
-            @RequestParam String begin_pos,
-            @RequestParam String end_pos,
-            @RequestParam String tag
-    ) {
+            @RequestBody TagForm tagForm
+            ) {
         try{
             long taggerId = userService.getCurrentUserId(httpRequest);
-            ImageTagData imageData = new ImageTagData(dataset_id, sample_id, begin_pos, end_pos, tag, taggerId);
+            ImageTagData imageData = new ImageTagData(tagForm.getDataset_id(), tagForm.getSample_id(), tagForm.getBegin_pos(), tagForm.getEnd_pos(), tagForm.getTag(), taggerId);
             imageTagDataRepo.save(imageData);
             Map<String, Object> response = new HashMap<>();
             response.put("code", 200);
