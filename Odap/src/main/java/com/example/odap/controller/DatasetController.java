@@ -181,8 +181,7 @@ public class DatasetController {
         // 根据id查询数据库中的数据集
         Dataset dataset = datasetRepository.findById(Long.valueOf(id)).orElse(null);
         if (dataset == null) {
-            // 处理数据集不存在的情况
-            // 返回适当的错误响应
+            return ResponseEntity.notFound().build();
         }
 
         // 删除原有文件
@@ -234,8 +233,7 @@ public class DatasetController {
         // 根据id查询数据库中的数据集
         Dataset dataset = datasetRepository.findById(Long.valueOf(id)).orElse(null);
         if (dataset == null) {
-            // 处理数据集不存在的情况
-            // 返回适当的错误响应
+            return ResponseEntity.notFound().build();
         }
 
         // 删除数据集
@@ -260,8 +258,7 @@ public class DatasetController {
         // 根据id查询数据库中的数据集
         Dataset dataset = datasetRepository.findById(Long.valueOf(id)).orElse(null);
         if (dataset == null) {
-            // 处理数据集不存在的情况
-            // 返回适当的错误响应
+            return ResponseEntity.notFound().build();
         }
 
         // 构建响应数据
