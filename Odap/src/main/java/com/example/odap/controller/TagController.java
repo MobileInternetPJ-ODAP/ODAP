@@ -20,7 +20,7 @@ public class TagController {
     private ImageTagDataRepo imageTagDataRepo;
     @Autowired
     private UserService userService;
-
+    @CrossOrigin
     @PostMapping("/tag")
     public ResponseEntity<Map<String, Object>> addTag(
             HttpServletRequest httpRequest,
@@ -43,7 +43,7 @@ public class TagController {
             return ResponseEntity.ok(response);
         }
     }
-
+    @CrossOrigin
     @GetMapping("/tags")
     public ResponseEntity<Map<String, Object>> getTags(
             @RequestParam("dataset_id") String datasetId,
@@ -62,9 +62,10 @@ public class TagController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/del_tag")
+    @CrossOrigin
+    @GetMapping("/del_tag/{id}")
     public ResponseEntity<Map<String, Object>> getTags(
-            @RequestParam("tag_id") String tagId
+            @PathVariable("id") String tagId
     ) {
         ImageTagData imageData = imageTagDataRepo.findById(Long.parseLong(tagId)).orElse(null);
         if(imageData == null){
