@@ -64,7 +64,7 @@ public class TagController {
 
     @CrossOrigin
     @GetMapping("/del_tag/{id}")
-    public ResponseEntity<Map<String, Object>> getTags(
+    public ResponseEntity<Map<String, Object>> delTag(
             @PathVariable("id") String tagId
     ) {
         ImageTagData imageData = imageTagDataRepo.findById(Long.parseLong(tagId)).orElse(null);
