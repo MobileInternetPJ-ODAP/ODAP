@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.odap.DTO.DatasetResponse;
@@ -65,12 +64,6 @@ public class DatasetController {
             @RequestParam String tag_type,
             @RequestParam("file") MultipartFile file) throws IOException {
 
-        if (!(sample_type.equals("语音") || sample_type.equals("图片") || sample_type.equals("文本"))) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("error_msg", "不支持的数据集类型！目前仅支持图片、语音、文本"); // 设置错误信息
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-        }
-
         //将文件存储在固定目录下，并将路径赋给dataset
         File dir = new File(uploadDir);
         if (!dir.exists()) {
@@ -85,71 +78,66 @@ public class DatasetController {
         try (OutputStream os = Files.newOutputStream(serverFile.toPath())) {
             os.write(file.getBytes());
         }
-        if(sample_type.equals("文本")){ //文本需要特别处理，语音和图片类似
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("error_msg", "功能正在开发中！");
-            return ResponseEntity.ok(response);
+        String unzipDirPath = dir.getAbsolutePath() + File.separator + "unzip" + File.separator + fileName;
+        File unzipDir = new File(unzipDirPath);
+        if (!unzipDir.exists()) {
+            unzipDir.mkdirs();
         }
-        else {
-            String unzipDirPath = dir.getAbsolutePath() + File.separator + "unzip" + File.separator + fileName;
-            File unzipDir = new File(unzipDirPath);
-            if (!unzipDir.exists()) {
-                unzipDir.mkdirs();
-            }
 
-            Dataset dataset = new Dataset();
-            dataset.setDatasetName(file.getOriginalFilename());
-            long id = userService.getCurrentUserId(httpRequest);
-            dataset.setPublisherId(id);
-            LocalDateTime pubTime = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String pubTimeStr = pubTime.format(formatter);
-            dataset.setPubTime(pubTimeStr);
-            dataset.setDescription(desc);
+        Dataset dataset = new Dataset();
+        dataset.setDatasetName(file.getOriginalFilename());
+        long id = userService.getCurrentUserId(httpRequest);
+        dataset.setPublisherId(id);
+        LocalDateTime pubTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String pubTimeStr = pubTime.format(formatter);
+        dataset.setPubTime(pubTimeStr);
+        dataset.setDescription(desc);
 
-            double sizeInBytes = file.getSize();
-            double sizeInMB = sizeInBytes / (1024 * 1024);
-            //保留两位小数
-            sizeInMB = (double) Math.round(sizeInMB * 100) / 100;
+        double sizeInBytes = file.getSize();
+        double sizeInMB = sizeInBytes / (1024 * 1024);
+        //保留两位小数
+        sizeInMB = (double) Math.round(sizeInMB * 100) / 100;
 
-            dataset.setSampleSize(sizeInMB);
-            dataset.setSampleType(sample_type);
-            dataset.setTagType(tag_type);
-            dataset.setFilePath(serverFile.getAbsolutePath());
+        dataset.setSampleSize(sizeInMB);
+        dataset.setSampleType(sample_type);
+        dataset.setTagType(tag_type);
+        dataset.setFilePath(serverFile.getAbsolutePath());
 
 
-            datasetRepository.save(dataset);
 
-            DatasetResponse datasetResponse = new DatasetResponse(dataset);
+        datasetRepository.save(dataset);
 
-            try (ZipInputStream zis = new ZipInputStream(new FileInputStream(serverFile))) {
-                ZipEntry zipEntry = zis.getNextEntry();
-                while (zipEntry != null) {
-                    File newFile = newFile(unzipDir, zipEntry);
-                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
-                        byte[] buffer = new byte[1024];
-                        int len;
-                        while ((len = zis.read(buffer)) > 0) {
-                            fos.write(buffer, 0, len);
-                        }
+        DatasetResponse datasetResponse = new DatasetResponse(dataset);
+
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(serverFile))) {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                File newFile = newFile(unzipDir, zipEntry);
+                try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, len);
                     }
-
-                    PictureData pictureData = new PictureData(dataset.getId(), newFile.getName(), newFile.getAbsolutePath());
-                    pictureDataRepository.save(pictureData);
-
-
-                    zipEntry = zis.getNextEntry();
                 }
-                zis.closeEntry();
-            }
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("error_msg", "success");
-            response.put("data", datasetResponse);
-            return ResponseEntity.ok(response);
+                PictureData pictureData = new PictureData(dataset.getId(), newFile.getName(), newFile.getAbsolutePath());
+                pictureDataRepository.save(pictureData);
+
+
+                zipEntry = zis.getNextEntry();
+            }
+            zis.closeEntry();
         }
+
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("code", 200);
+        response.put("error_msg", "success");
+        response.put("data", datasetResponse);
+
+        return ResponseEntity.ok(response);
     }
 
     @CrossOrigin
@@ -296,4 +284,3 @@ public class DatasetController {
         return destFile;
     }
 }
-
