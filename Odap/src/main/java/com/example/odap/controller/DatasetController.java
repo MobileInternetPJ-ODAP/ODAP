@@ -1,24 +1,29 @@
 package com.example.odap.controller;
 
-import com.example.odap.entity.Dataset;
-import com.example.odap.entity.PictureData;
+import com.example.odap.entity.*;
 import com.example.odap.repository.DatasetRepository;
 import com.example.odap.repository.PictureDataRepository;
+import com.example.odap.repository.TextDataRepository;
+import com.example.odap.repository.VoiceDataRepository;
 import com.example.odap.request.DatasetAddRequest;
 import com.example.odap.request.DatasetUpdateRequest;
 import com.example.odap.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.odap.DTO.DatasetResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -35,6 +40,13 @@ public class DatasetController {
 
     @Autowired
     private PictureDataRepository pictureDataRepository;
+
+    @Autowired
+    private VoiceDataRepository voiceDataRepository;
+
+    @Autowired
+    private TextDataRepository textDataRepository;
+
     @Autowired
     private UserService userService;
 
@@ -64,6 +76,12 @@ public class DatasetController {
             @RequestParam String tag_type,
             @RequestParam("file") MultipartFile file) throws IOException {
 
+        if (!(sample_type.equals("语音") || sample_type.equals("图片") || sample_type.equals("文本"))) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error_msg", "不支持的数据集类型！目前仅支持图片、语音、文本"); // 设置错误信息
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
         //将文件存储在固定目录下，并将路径赋给dataset
         File dir = new File(uploadDir);
         if (!dir.exists()) {
@@ -78,12 +96,8 @@ public class DatasetController {
         try (OutputStream os = Files.newOutputStream(serverFile.toPath())) {
             os.write(file.getBytes());
         }
-        String unzipDirPath = dir.getAbsolutePath() + File.separator + "unzip" + File.separator + fileName;
-        File unzipDir = new File(unzipDirPath);
-        if (!unzipDir.exists()) {
-            unzipDir.mkdirs();
-        }
 
+        //在数据集表中加入数据集的记录
         Dataset dataset = new Dataset();
         dataset.setDatasetName(file.getOriginalFilename());
         long id = userService.getCurrentUserId(httpRequest);
@@ -104,39 +118,62 @@ public class DatasetController {
         dataset.setTagType(tag_type);
         dataset.setFilePath(serverFile.getAbsolutePath());
 
-
-
         datasetRepository.save(dataset);
-
         DatasetResponse datasetResponse = new DatasetResponse(dataset);
 
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(serverFile))) {
-            ZipEntry zipEntry = zis.getNextEntry();
-            while (zipEntry != null) {
-                File newFile = newFile(unzipDir, zipEntry);
-                try (FileOutputStream fos = new FileOutputStream(newFile)) {
-                    byte[] buffer = new byte[1024];
-                    int len;
-                    while ((len = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, len);
-                    }
+        //对文本数据集进行解析和存储
+        if(sample_type.equals("文本")){ //文本数据需要特别处理，语音数据和图片数据类似
+            String filePath = serverFile.getAbsolutePath();
+            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+                String line;
+                ObjectMapper mapper = new ObjectMapper();
+                while ((line = reader.readLine()) != null) {
+                    // 解析每一行的 JSON 数据
+                    String jsonObject = mapper.readValue(line, Object.class).toString();
+                    System.out.println(jsonObject);
+                    TextData textData = new TextData(dataset.getId(), jsonObject);
+                    textDataRepository.save(textData);
                 }
-
-                PictureData pictureData = new PictureData(dataset.getId(), newFile.getName(), newFile.getAbsolutePath());
-                pictureDataRepository.save(pictureData);
-
-
-                zipEntry = zis.getNextEntry();
             }
-            zis.closeEntry();
         }
+        //对语音和图片数据集进行解压并存储
+        else {
+            // 开始解压文件，并将数据加入对应语音/图像数据表
+            String unzipDirPath = dir.getAbsolutePath() + File.separator + "unzip" + File.separator + fileName;
+            File unzipDir = new File(unzipDirPath);
+            if (!unzipDir.exists()) {
+                unzipDir.mkdirs();
+            }
 
+            try (ZipInputStream zis = new ZipInputStream(new FileInputStream(serverFile))) {
+                ZipEntry zipEntry = zis.getNextEntry();
+                while (zipEntry != null) {
+                    File newFile = newFile(unzipDir, zipEntry);
+                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
+                    }
+                    if(sample_type.equals("图片")) {
+                        PictureData pictureData = new PictureData(dataset.getId(), newFile.getName(), newFile.getAbsolutePath());
+                        pictureDataRepository.save(pictureData);
+                    }
+                    else{ // 否则样本类型为语音
+                        VoiceData voiceData = new VoiceData(dataset.getId(), newFile.getName(), newFile.getAbsolutePath());
+                        voiceDataRepository.save(voiceData);
+                    }
+                    zipEntry = zis.getNextEntry();
+                }
+                zis.closeEntry();
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
         response.put("error_msg", "success");
         response.put("data", datasetResponse);
-
         return ResponseEntity.ok(response);
     }
 
@@ -229,13 +266,22 @@ public class DatasetController {
 
     @CrossOrigin
     @GetMapping ("/del_dataset/{id}")
-    public ResponseEntity<Map<String, Object>> deleteDataset(@PathVariable("id") String id) {
+    public ResponseEntity<Map<String, Object>> deleteDataset(HttpServletRequest request, @PathVariable("id") String id) {
         // 根据id查询数据库中的数据集
         Dataset dataset = datasetRepository.findById(Long.valueOf(id)).orElse(null);
         if (dataset == null) {
             return ResponseEntity.notFound().build();
         }
 
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("user");
+
+        if(!user.getUserName().equals("root")){ // 验证是否是管理员用户
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", 405);
+            response.put("error_msg", "Only root members can delete dataset!");
+            return ResponseEntity.ok(response);
+        }
         // 删除数据集
         assert dataset != null;
         File oldFile = new File(dataset.getFilePath());
@@ -284,3 +330,5 @@ public class DatasetController {
         return destFile;
     }
 }
+
+

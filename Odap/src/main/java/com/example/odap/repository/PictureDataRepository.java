@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PictureDataRepository extends JpaRepository<PictureData, Long> {
     Page<PictureData> findByDatasetId(Long datasetID, PageRequest pageRequest);
-
     PictureData findByDatasetIdAndId(Long datasetId, Long id);
     int countByDatasetId(Long datasetID);
 }

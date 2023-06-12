@@ -43,7 +43,6 @@ public class LoginController {
         session.setAttribute("user", user);
         session.setMaxInactiveInterval(10 * 60); // 10分钟
 
-
         response.put("code", CODE_SUCCESS);
         response.put("error_msg", MSG_SUCCESS);
         Map<String, Object> data = new HashMap<>();
