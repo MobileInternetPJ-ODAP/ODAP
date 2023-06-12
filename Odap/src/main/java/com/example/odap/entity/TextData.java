@@ -24,8 +24,8 @@ public class TextData {
         super();
     }
 
-    public TextData(Long id, Long datasetId, String content){
-        this.id = id;
+    public TextData(Long datasetId, String content){
+        super();
         this.datasetId = datasetId;
         this.content = content;
     }

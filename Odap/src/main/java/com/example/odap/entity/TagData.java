@@ -11,7 +11,7 @@ import javax.persistence.*;
 @Data
 @Getter
 @Setter
-public class ImageTagData {
+public class TagData {
     @Id
     @GeneratedValue
     private Long id;
@@ -27,10 +27,10 @@ public class ImageTagData {
     private String tag;
     @Column(name = "tagger_id")
     private Long taggerId;
-    public ImageTagData() {
+    public TagData() {
         super();
     }
-    public ImageTagData(String datasetId, String sampleId, String beginPos, String endPos, String tag, Long taggerId) {
+    public TagData(String datasetId, String sampleId, String beginPos, String endPos, String tag, Long taggerId) {
         super();
         this.datasetId = datasetId;
         this.sampleId = sampleId;
