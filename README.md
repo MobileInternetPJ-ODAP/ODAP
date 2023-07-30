@@ -15,7 +15,7 @@ myapp.upload-dir=$your_upload_dir$
 
 ## 运行演示
 
-![image-20230731015846420](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731015846420.png)
+![image-20230731015846420](/README.assets/image-20230731015846420.png)
 
 ![image-20230731015958816](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731015958816.png)
 
