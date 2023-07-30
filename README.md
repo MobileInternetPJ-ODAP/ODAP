@@ -17,24 +17,24 @@ myapp.upload-dir=$your_upload_dir$
 
 ![image-20230731015846420](/README.assets/image-20230731015846420.png)
 
-![image-20230731015958816](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731015958816.png)
+![image-20230731015958816](/README.assets/image-20230731015958816.png)
 
-![image-20230731020023072](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731020023072.png)
+![image-20230731020023072](/README.assets/image-20230731020023072.png)
 
 **数据集预览**
 
-![image-20230731020637189](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731020637189.png)
+![image-20230731020637189](/README.assets/image-20230731020637189.png)
 
-![image-20230731020719425](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731020719425.png)
+![image-20230731020719425](/README.assets/image-20230731020719425.png)
 
-![image-20230731020117231](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731020117231.png)
+![image-20230731020117231](/README.assets/image-20230731020117231.png)
 
-![image-20230731020135396](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731020135396.png)
+![image-20230731020135396](/README.assets/image-20230731020135396.png)
 
 **用户管理**
 
-![image-20230731020534658](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731020534658.png)
+![image-20230731020534658](/README.assets/image-20230731020534658.png)
 
 **音频文件标注**
 
-![image-20230731020436389](/Users/zhengyuanze/Documents/GitHub/Odap_Backend/README.assets/image-20230731020436389.png)
+![image-20230731020436389](/README.assets/image-20230731020436389.png)
